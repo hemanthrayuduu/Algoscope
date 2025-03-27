@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeetVision</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+      width: 320px;
+      color: #333;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .header img {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+    
+    .section {
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #555;
+    }
+    
+    .form-group {
+      margin-bottom: 10px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+    }
+    
+    .checkbox-group label {
+      margin-bottom: 0;
+      margin-left: 8px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 8px;
+      background-color: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #005a9e;
+    }
+    
+    .status {
+      font-size: 14px;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    .status.success {
+      background-color: #d4edda;
+      color: #155724;
+      display: block;
+    }
+    
+    .status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      display: block;
+    }
+    
+    .footer {
+      font-size: 12px;
+      color: #777;
+      margin-top: 15px;
+      text-align: center;
+    }
+    
+    /* Dark mode compatibility */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #292929;
+        color: #f0f0f0;
+      }
+      
+      .section-title {
+        color: #bbb;
+      }
+      
+      input[type="text"],
+      input[type="password"] {
+        background-color: #3d3d3d;
+        border-color: #555;
+        color: #f0f0f0;
+      }
+      
+      .status.success {
+        background-color: #1e3a2d;
+        color: #a3d9b3;
+      }
+      
+      .status.error {
+        background-color: #3d2022;
+        color: #f0a9ae;
+      }
+      
+      .footer {
+        color: #aaa;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="../../assets/icon48.png" alt="LeetVision Logo">
+    <h1>LeetVision</h1>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">API Settings</div>
+    <div class="form-group">
+      <label for="api-key">OpenAI API Key</label>
+      <input type="password" id="api-key" placeholder="Enter your OpenAI API key">
+    </div>
+    <button id="save-settings">Save Settings</button>
+    <div id="settings-status" class="status"></div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">Visualization Options</div>
+    <div class="form-group checkbox-group">
+      <input type="checkbox" id="auto-analyze">
+      <label for="auto-analyze">Automatically analyze problems</label>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>LeetVision v1.0.0 - Visualize coding problems with ease</p>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 

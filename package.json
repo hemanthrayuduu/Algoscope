@@ -1,0 +1,28 @@
+{
+  "name": "leetvision",
+  "version": "1.0.0",
+  "description": "Chrome extension to visualize coding problems using D3.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch"
+  },
+  "keywords": [
+    "chrome-extension",
+    "leetcode",
+    "hackerrank",
+    "d3js",
+    "algorithm-visualization"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.8.1",
+    "style-loader": "^3.3.3"
+  },
+  "dependencies": {
+    "d3": "^7.8.5"
+  }
+} 
