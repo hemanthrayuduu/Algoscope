@@ -9,7 +9,7 @@
 export const TRACER_SOURCE = String.raw`
 import sys, io, json
 
-USER_FILE = "<leetvision-user>"
+USER_FILE = "<algoscope-user>"
 
 def _run(code, entry_function, args_json, max_steps):
     steps = []

@@ -1,5 +1,5 @@
 {
-  "name": "leetvision",
+  "name": "algoscope",
   "version": "2.0.0",
   "private": true,
   "description": "Watch your code run. An interactive web app that executes JavaScript and Python step by step and visualizes data structures as they change.",

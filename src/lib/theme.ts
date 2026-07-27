@@ -3,7 +3,7 @@
 
 export type Theme = 'light' | 'dark';
 
-const STORAGE_KEY = 'leetvision-theme';
+const STORAGE_KEY = 'algoscope-theme';
 
 export function getInitialTheme(): Theme {
   const stored = localStorage.getItem(STORAGE_KEY);

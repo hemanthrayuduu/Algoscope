@@ -16,7 +16,7 @@ export function Header({ language, theme, shareLabel, onLanguageChange, onToggle
       <div className="brand">
         <span className="brand-mark" aria-hidden>◐</span>
         <div>
-          <h1 className="brand-name">LeetVision</h1>
+          <h1 className="brand-name">Algoscope</h1>
           <p className="brand-tag">Watch your code run</p>
         </div>
       </div>
