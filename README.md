@@ -2,7 +2,7 @@
 
 **Watch your code run.** Algoscope executes **JavaScript and Python** one step at a time and turns each step into a live data-structure visualization — arrays, matrices, hash maps, sets, linked lists, trees, and graphs — so you can *see* an algorithm work instead of just reading it.
 
-**[▶ Live demo](https://hemanthrayuduu.github.io/algoscope/)**
+**[▶ Live demo](https://hemanthrayuduu.github.io/Algoscope/)**
 
 <!-- ![Algoscope in action](docs/screenshot.png) -->
 

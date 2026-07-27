@@ -15,6 +15,22 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
-    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        // Split large vendors into their own long-cacheable chunks so the
+        // initial payload is parallelized and doesn't churn on app changes.
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          codemirror: [
+            '@codemirror/state',
+            '@codemirror/view',
+            '@codemirror/commands',
+            '@codemirror/lang-javascript',
+            '@codemirror/lang-python',
+            '@codemirror/theme-one-dark',
+          ],
+        },
+      },
+    },
   },
 });

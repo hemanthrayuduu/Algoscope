@@ -2,7 +2,6 @@
 // main thread via the built-in interpreter; Python runs in a Web Worker via
 // Pyodide. Both resolve to the same RunResult shape.
 
-import { runJavaScript } from './jsInterpreter';
 import type { RunRequest, RunResult } from './types';
 
 const MAX_STEPS = 20000;
@@ -57,8 +56,9 @@ function runPython(request: RunRequest, onStatus?: (message: string) => void): P
 
 export async function run(request: RunRequest, onStatus?: (message: string) => void): Promise<RunResult> {
   if (request.language === 'python') return runPython(request, onStatus);
-  // Yield once so the UI can paint a "running" state before a big JS run.
-  await Promise.resolve();
+  // Lazy-load the interpreter (and acorn) only on the first JS run; this also
+  // yields so the UI can paint a "running" state before a big run.
+  const { runJavaScript } = await import('./jsInterpreter');
   return runJavaScript(request, MAX_STEPS);
 }
 

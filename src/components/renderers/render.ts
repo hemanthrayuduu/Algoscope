@@ -2,7 +2,9 @@
 // (no hard-coded colors) so light/dark theming lives entirely in CSS.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as d3 from 'd3';
+import { select, type Selection } from 'd3-selection';
+import { forceCenter, forceLink, forceManyBody, forceSimulation } from 'd3-force';
+import { hierarchy, tree } from 'd3-hierarchy';
 import type { CallFrame, Step, VizMap, VizObject, VizSet, VizValue } from '../../engine/types';
 import { isTagged } from '../../engine/types';
 import { CHILD_FIELDS, VALUE_FIELDS, classify, isStructural } from './classify';
@@ -33,7 +35,7 @@ function nodeValueField(o: VizObject): VizValue {
   return null;
 }
 
-function block(parent: d3.Selection<any, any, any, any>, label: string) {
+function block(parent: Selection<any, any, any, any>, label: string) {
   const wrap = parent.append('div').attr('class', 'viz-block');
   wrap.append('div').attr('class', 'viz-block-label').text(label);
   return wrap.append('div').attr('class', 'viz-block-body');
@@ -255,21 +257,21 @@ function renderTree(parent: any, name: string, root: VizObject) {
     return kids;
   };
 
-  const hierarchy = d3.hierarchy<VizObject>(root, buildChildren);
-  const count = hierarchy.descendants().length;
-  const depth = hierarchy.height + 1;
+  const root_ = hierarchy<VizObject>(root, buildChildren);
+  const count = root_.descendants().length;
+  const depth = root_.height + 1;
   const width = Math.max(count * 60, 160);
   const height = depth * 70;
-  d3.tree<VizObject>().size([width - 60, height - 60])(hierarchy);
+  tree<VizObject>().size([width - 60, height - 60])(root_);
 
-  const nodes: GNode[] = hierarchy.descendants().map((d, i) => ({
+  const nodes: GNode[] = root_.descendants().map((d, i) => ({
     id: `n${i}`,
     label: shortText(nodeValueField(d.data)),
     x: (d as any).x + 30,
     y: (d as any).y + 30,
   }));
-  const nodeIndex = new Map(hierarchy.descendants().map((d, i) => [d, i]));
-  const links: GLink[] = hierarchy.links().map((l) => ({
+  const nodeIndex = new Map(root_.descendants().map((d, i) => [d, i]));
+  const links: GLink[] = root_.links().map((l) => ({
     source: `n${nodeIndex.get(l.source)}`,
     target: `n${nodeIndex.get(l.target)}`,
     field: 'child',
@@ -281,11 +283,10 @@ function renderGraphFallback(parent: any, name: string, root: VizObject) {
   const { nodes, links } = flattenNodes(root);
   const width = 420;
   const height = 260;
-  const sim = d3
-    .forceSimulation(nodes as any)
-    .force('link', d3.forceLink(links as any).id((d: any) => d.id).distance(70))
-    .force('charge', d3.forceManyBody().strength(-220))
-    .force('center', d3.forceCenter(width / 2, height / 2))
+  const sim = forceSimulation(nodes as any)
+    .force('link', forceLink(links as any).id((d: any) => d.id).distance(70))
+    .force('charge', forceManyBody().strength(-220))
+    .force('center', forceCenter(width / 2, height / 2))
     .stop();
   for (let i = 0; i < 200; i++) sim.tick();
   nodes.forEach((n) => {
@@ -323,7 +324,7 @@ function renderCallStack(parent: any, stack: CallFrame[]) {
 
 /** Clears `container` and renders one step. `prev` enables change highlighting. */
 export function renderStep(container: HTMLElement, step: Step | null, prev: Step | null): void {
-  const root = d3.select(container);
+  const root = select(container);
   root.selectAll('*').remove();
   if (!step) {
     root.append('div').attr('class', 'viz-empty').text('Run your code to see it visualized here.');
