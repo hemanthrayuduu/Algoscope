@@ -7,7 +7,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // Add event listeners
   document.getElementById('save-settings').addEventListener('click', saveSettings);
   document.getElementById('auto-analyze').addEventListener('change', saveAutoAnalyze);
+  document.getElementById('open-step-visualizer').addEventListener('click', openStepVisualizer);
 });
+
+/**
+ * Asks the content script on the active tab to open the local step-through
+ * visualizer panel.
+ */
+function openStepVisualizer() {
+  const statusElement = document.getElementById('step-visualizer-status');
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tab = tabs[0];
+    if (!tab) return;
+
+    chrome.tabs.sendMessage(tab.id, { action: 'openStepVisualizer' }, (response) => {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        statusElement.textContent = 'Open a LeetCode or HackerRank problem page first.';
+        statusElement.className = 'status error';
+        return;
+      }
+      statusElement.textContent = 'Visualizer opened on the page.';
+      statusElement.className = 'status success';
+      setTimeout(() => {
+        statusElement.className = 'status';
+      }, 3000);
+    });
+  });
+}
 
 /**
  * Loads saved settings from Chrome storage

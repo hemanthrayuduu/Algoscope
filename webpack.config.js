@@ -1,15 +1,23 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 
+const ENTRY_OUTPUT_PATHS = {
+  background: 'background/background.js',
+  popup: 'popup/popup.js',
+  content: 'content/content.js',
+  stepVisualizer: 'content/stepVisualizer.js',
+};
+
 module.exports = {
   entry: {
     background: './src/background/background.js',
     content: './src/content/content.js',
     popup: './src/popup/popup.js',
+    stepVisualizer: './src/content/stepVisualizer.js',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'src/[name]/[name].js',
+    filename: (pathData) => `src/${ENTRY_OUTPUT_PATHS[pathData.chunk.name]}`,
   },
   module: {
     rules: [

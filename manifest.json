@@ -32,7 +32,8 @@
       "js": [
         "src/content/content.js",
         "src/content/extractors.js",
-        "src/content/visualization.js"
+        "src/content/visualization.js",
+        "src/content/stepVisualizer.js"
       ],
       "css": [
         "src/content/styles.css"

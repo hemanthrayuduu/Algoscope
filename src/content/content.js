@@ -76,6 +76,7 @@ class LeetVisionController {
       <h3>LeetVision - Algorithm Visualizer</h3>
       <div class="leetvision-controls">
         <button id="leetvision-analyze-btn" class="leetvision-btn">Visualize Problem</button>
+        <button id="leetvision-steptrough-btn" class="leetvision-btn">Step Through My Code</button>
         <button id="leetvision-toggle-btn" class="leetvision-btn">Hide</button>
       </div>
     `;
@@ -121,11 +122,13 @@ class LeetVisionController {
       visualization,
       explanation,
       analyzeBtn: header.querySelector('#leetvision-analyze-btn'),
+      stepThroughBtn: header.querySelector('#leetvision-steptrough-btn'),
       toggleBtn: header.querySelector('#leetvision-toggle-btn')
     };
-    
+
     // Add event listeners
     this.uiElements.analyzeBtn.addEventListener('click', () => this.analyzeProblem());
+    this.uiElements.stepThroughBtn.addEventListener('click', () => this.openStepVisualizer());
     this.uiElements.toggleBtn.addEventListener('click', () => this.toggleVisibility());
     
     // Add container to the page
@@ -171,6 +174,18 @@ class LeetVisionController {
     this.uiElements.toggleBtn.textContent = isVisible ? 'Show' : 'Hide';
   }
   
+  /**
+   * Opens the local step-through execution visualizer for the current problem.
+   * Runs entirely in this content script; no network/LLM calls involved.
+   */
+  openStepVisualizer() {
+    if (!window.LeetVision.stepVisualizer) {
+      this.showError('Step visualizer failed to load.');
+      return;
+    }
+    window.LeetVision.stepVisualizer.open(this.problemData);
+  }
+
   /**
    * Sends the problem data to the background script for analysis
    */
@@ -314,6 +329,20 @@ class LeetVisionController {
     `;
   }
 }
+
+// Allow the popup to trigger the local step-through visualizer without
+// needing to read back the controller's in-memory problem data.
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'openStepVisualizer') {
+    const controller = window.LeetVision && window.LeetVision.controller;
+    if (controller && controller.initialized) {
+      controller.openStepVisualizer();
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false, error: 'Not on a supported problem page' });
+    }
+  }
+});
 
 // Initialize controller when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
