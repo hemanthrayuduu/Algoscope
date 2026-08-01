@@ -75,6 +75,22 @@ interface Interp {
   output: string;
   callStack: CallFrame[];
   callDepth: number;
+  /**
+   * Operations executed so far. This is deliberately separate from the step
+   * count: a loop with an empty body (`while (true) {}`) yields no steps at
+   * all, so a step-based limit would never fire and the run would hang. Every
+   * statement and call ticks this instead, guaranteeing termination.
+   */
+  ops: number;
+  maxOps: number;
+}
+
+function tick(interp: Interp): void {
+  if (++interp.ops > interp.maxOps) {
+    throw new InterpreterError(
+      `Stopped after ${interp.maxOps} operations (possible infinite loop). Check your loop conditions.`,
+    );
+  }
 }
 
 function isUserFunction(v: any): v is UserFunction {
@@ -182,6 +198,7 @@ function* callFunction(interp: Interp, fn: any, args: any[]): Generator<Step, an
   if (typeof fn === 'function') return fn(...args);
   if (!isUserFunction(fn)) throw new InterpreterError('Attempted to call a non-function value');
 
+  tick(interp);
   interp.callDepth++;
   if (interp.callDepth > 800) {
     throw new InterpreterError('Maximum call stack depth exceeded (possible infinite recursion)');
@@ -223,8 +240,11 @@ function callArrayMethod(arr: any, method: string, args: any[]): any {
     case 'keys': return [...arr.keys()];
     case 'values': return [...arr.values()];
     case 'sort':
-      if (args[0]) throw new InterpreterError('sort() with a custom comparator is not supported yet');
-      return arr.sort((a: any, b: any) => (a > b ? 1 : a < b ? -1 : 0));
+      // Comparator sorts are routed through callArrayHigherOrder, since calling
+      // back into user code requires the generator. The default sort delegates
+      // to the engine so it matches JS exactly — including the surprising
+      // lexicographic ordering of numbers ([10, 9] sorts to [10, 9]).
+      return arr.sort();
     default:
       throw new InterpreterError(`Unsupported array method: .${method}()`);
   }
@@ -464,7 +484,11 @@ function* evalCall(interp: Interp, node: Node, scope: Scope): Generator<Step, an
 
     const obj = yield* evalExpr(interp, objNode, scope);
     // Higher-order array methods need to call back into the interpreter.
-    if (Array.isArray(obj) && ['map', 'filter', 'forEach', 'reduce', 'some', 'every', 'find', 'findIndex'].includes(method)) {
+    if (
+      Array.isArray(obj) &&
+      (['map', 'filter', 'forEach', 'reduce', 'some', 'every', 'find', 'findIndex'].includes(method) ||
+        (method === 'sort' && args[0]))
+    ) {
       return yield* callArrayHigherOrder(interp, obj, method, args);
     }
     if (Array.isArray(obj)) return callArrayMethod(obj, method, args);
@@ -524,9 +548,38 @@ function* callArrayHigherOrder(interp: Interp, arr: any[], method: string, args:
     case 'findIndex':
       for (let i = 0; i < arr.length; i++) if (truthy(yield* callFunction(interp, cb, [arr[i], i, arr]))) return i;
       return -1;
+    case 'sort': {
+      // Merge sort rather than delegating to Array#sort: the comparator is user
+      // code, so each comparison must be driven through the interpreter's
+      // generator. Merge sort is also stable, matching engine behaviour.
+      const sorted = yield* mergeSort(interp, arr.slice(), cb);
+      // sort() mutates in place and returns the same array.
+      for (let i = 0; i < sorted.length; i++) arr[i] = sorted[i];
+      return arr;
+    }
     default:
       throw new InterpreterError(`Unsupported array method: .${method}()`);
   }
+}
+
+function* mergeSort(interp: Interp, items: any[], cb: any): Generator<Step, any[], unknown> {
+  if (items.length <= 1) return items;
+  const mid = Math.floor(items.length / 2);
+  const left = yield* mergeSort(interp, items.slice(0, mid), cb);
+  const right = yield* mergeSort(interp, items.slice(mid), cb);
+
+  const out: any[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < left.length && j < right.length) {
+    const order = Number(yield* callFunction(interp, cb, [left[i], right[j]]));
+    // <= 0 keeps equal elements in their original order (stable).
+    if (!Number.isFinite(order) || order <= 0) out.push(left[i++]);
+    else out.push(right[j++]);
+  }
+  while (i < left.length) out.push(left[i++]);
+  while (j < right.length) out.push(right[j++]);
+  return out;
 }
 
 function displayForConsole(v: any): string {
@@ -587,6 +640,7 @@ function* execBlock(interp: Interp, statements: Node[], scope: Scope): Generator
 }
 
 function* execStatement(interp: Interp, node: Node, scope: Scope): Generator<Step, Signal, unknown> {
+  tick(interp);
   switch (node.type) {
     case 'VariableDeclaration': {
       for (const decl of node.declarations) {
@@ -613,15 +667,31 @@ function* execStatement(interp: Interp, node: Node, scope: Scope): Generator<Ste
       return null;
     }
     case 'ForStatement': {
-      const loopScope = new Scope(scope);
+      let loopScope = new Scope(scope);
       if (node.init) {
         if (node.init.type === 'VariableDeclaration') yield* execStatement(interp, node.init, loopScope);
         else yield* evalExpr(interp, node.init, loopScope);
       }
+
+      // `let`/`const` loop variables get a fresh binding each iteration, so a
+      // closure created in the body captures that iteration's value rather than
+      // the final one. `var` (and a bare expression init) keeps one binding.
+      const perIteration =
+        node.init && node.init.type === 'VariableDeclaration' && node.init.kind !== 'var'
+          ? [...loopScope.vars.keys()]
+          : [];
+
+      const copyLoopScope = (from: Scope): Scope => {
+        const next = new Scope(scope);
+        for (const name of perIteration) next.declare(name, from.get(name));
+        return next;
+      };
+
       while (!node.test || truthy(yield* evalExpr(interp, node.test, loopScope))) {
         const signal = yield* execStatement(interp, node.body, new Scope(loopScope));
         if (signal instanceof BreakSignal) break;
         if (signal instanceof ReturnSignal) return signal;
+        if (perIteration.length) loopScope = copyLoopScope(loopScope);
         if (node.update) yield* evalExpr(interp, node.update, loopScope);
       }
       return null;
@@ -686,12 +756,24 @@ function* execStatement(interp: Interp, node: Node, scope: Scope): Generator<Ste
   }
 }
 
+export interface JsRunOptions {
+  /** Guards against runaway loops; execution stops once exceeded. */
+  maxSteps?: number;
+  /**
+   * When false, steps are executed but not retained. Judging runs many test
+   * cases and only needs the return value, so keeping every snapshot would
+   * waste time and memory for no benefit.
+   */
+  collectSteps?: boolean;
+}
+
 /**
- * Runs `request` to completion, collecting every step. `maxSteps` guards
- * against runaway loops; when exceeded, execution stops and the partial run
- * is returned with an error message.
+ * Runs `request` to completion. Returns the collected steps (when requested),
+ * the return value, stdout, and any error; a run that fails partway still
+ * returns the steps up to the failure so the user can see how far it got.
  */
-export function runJavaScript(request: RunRequest, maxSteps = 20000): RunResult {
+export function runJavaScript(request: RunRequest, options: JsRunOptions = {}): RunResult {
+  const { maxSteps = 20000, collectSteps = true } = options;
   const { code, entryFunction, argsJson } = request;
   let ast: Node;
   try {
@@ -708,14 +790,19 @@ export function runJavaScript(request: RunRequest, maxSteps = 20000): RunResult 
     return { steps: [], stdout: '', error: `Could not parse arguments: ${err.message}` };
   }
 
-  const interp: Interp = { output: '', callStack: [], callDepth: 0 };
+  // Operations are much cheaper than steps, so the budget is a multiple of the
+  // step limit: enough headroom for legitimate work, low enough that a runaway
+  // loop is caught in well under a second.
+  const interp: Interp = { output: '', callStack: [], callDepth: 0, ops: 0, maxOps: maxSteps * 50 };
   const steps: Step[] = [];
 
   function collect(gen: Generator<Step, any, unknown>): { value: any; error?: string } {
+    let executed = 0;
     let res = gen.next();
     while (!res.done) {
-      steps.push(res.value);
-      if (steps.length > maxSteps) {
+      if (collectSteps) steps.push(res.value);
+      executed++;
+      if (executed > maxSteps) {
         return { value: undefined, error: `Stopped after ${maxSteps} steps (possible infinite loop).` };
       }
       res = gen.next();

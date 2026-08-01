@@ -18,6 +18,8 @@ interface RunMessage {
   entryFunction: string;
   argsJson: string;
   maxSteps: number;
+  /** When false, run without sys.settrace (much faster; used for judging). */
+  trace?: boolean;
 }
 
 function post(msg: Record<string, unknown>) {
@@ -38,12 +40,12 @@ async function getPyodide(id: number): Promise<any> {
 }
 
 self.onmessage = async (event: MessageEvent<RunMessage>) => {
-  const { id, code, entryFunction, argsJson, maxSteps } = event.data;
+  const { id, code, entryFunction, argsJson, maxSteps, trace = true } = event.data;
   try {
     const pyodide = await getPyodide(id);
     post({ id, kind: 'status', message: 'Running…' });
     const runFn = pyodide.globals.get('_run');
-    const resultJson: string = runFn(code, entryFunction, argsJson, maxSteps);
+    const resultJson: string = runFn(code, entryFunction, argsJson, maxSteps, trace);
     runFn.destroy?.();
     post({ id, kind: 'result', resultJson });
   } catch (err: any) {
