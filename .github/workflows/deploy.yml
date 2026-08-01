@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+# Builds the app and publishes dist/ to GitHub Pages.
+# Prerequisite (one-time, in the repo): Settings → Pages → Build and
+# deployment → Source = "GitHub Actions".
+
+on:
+  push:
+    branches:
+      - main
+      - claude/leetvision-use-case-2lhvzt
+  workflow_dispatch:
+
+# Allow the workflow to publish to Pages via OIDC.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; newer runs supersede in-progress ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        # A project Pages site is served from /<repo>/, so the Vite base must
+        # match the repository name exactly. Derive it to avoid a hard-coded
+        # value drifting out of sync with the repo name.
+        run: |
+          export VITE_BASE="/${GITHUB_REPOSITORY#*/}/"
+          echo "Building with base $VITE_BASE"
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    # The github-pages environment only allows deployments from the default
+    # branch, so only deploy on main. On other branches (e.g. PRs) the build
+    # job still runs as a CI signal, and this job is skipped rather than failing.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
