@@ -11,7 +11,7 @@ import sys, io, json
 
 USER_FILE = "<algoscope-user>"
 
-def _run(code, entry_function, args_json, max_steps):
+def _run(code, entry_function, args_json, max_steps, trace=True):
     steps = []
     stdout_buffer = io.StringIO()
 
@@ -107,7 +107,10 @@ def _run(code, entry_function, args_json, max_steps):
         args = json.loads(args_json or "[]")
         if not isinstance(args, list):
             raise ValueError("Arguments must be a JSON array")
-        sys.settrace(tracer)
+        # Judging only needs the return value, and tracing every line is by far
+        # the dominant cost, so it is skipped unless a trace was requested.
+        if trace:
+            sys.settrace(tracer)
         exec(compiled, namespace)
         if entry_function not in namespace:
             raise NameError('Function "%s" was not found.' % entry_function)

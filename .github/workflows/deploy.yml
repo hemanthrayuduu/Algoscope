@@ -35,6 +35,17 @@ jobs:
 
       - run: npm ci
 
+      - name: Unit tests
+        # Includes the differential interpreter tests and the library
+        # self-check, so a broken problem definition fails here rather than
+        # silently marking correct submissions wrong.
+        run: npm test
+
+      - name: Cross-language reference check
+        # Verifies every Python reference solution against real CPython and
+        # asserts both languages agree on every test case.
+        run: npm run test:python
+
       - name: Build
         # A project Pages site is served from /<repo>/, so the Vite base must
         # match the repository name exactly. Derive it to avoid a hard-coded
