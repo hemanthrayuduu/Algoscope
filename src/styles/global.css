@@ -185,10 +185,11 @@ body {
 
 /* Workspace layout -------------------------------------------------------- */
 
+/* One workspace: context, editor, visualization. */
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(420px, 1fr) minmax(420px, 1.1fr);
+  grid-template-columns: minmax(300px, 0.85fr) minmax(380px, 1.05fr) minmax(340px, 1fr);
   gap: 16px;
   padding: 16px;
   min-height: 0;
@@ -237,7 +238,7 @@ body {
 
 .text-input,
 .example-picker,
-.problem-picker {
+.library-picker {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -249,7 +250,7 @@ body {
 }
 
 .example-picker,
-.problem-picker {
+.library-picker {
   font-family: var(--sans);
   font-weight: 600;
   cursor: pointer;
@@ -261,7 +262,7 @@ body {
 
 .text-input:focus,
 .example-picker:focus,
-.problem-picker:focus {
+.library-picker:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
@@ -570,15 +571,9 @@ body {
   font-size: 13px;
 }
 
-/* Responsive -------------------------------------------------------------- */
+/* Context panel ----------------------------------------------------------- */
 
-/* Practice mode ----------------------------------------------------------- */
-
-.workspace-practice {
-  grid-template-columns: minmax(300px, 0.85fr) minmax(380px, 1.05fr) minmax(340px, 1fr);
-}
-
-.problem-scroll {
+.item-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -587,14 +582,14 @@ body {
 
 /* Base styling is shared with the other inputs above. */
 
-.problem-heading {
+.item-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.problem-title {
+.item-title {
   margin: 0;
   font-size: 19px;
   letter-spacing: -0.01em;
@@ -630,7 +625,7 @@ body {
   margin: 10px 0 4px;
 }
 
-.problem-text {
+.item-text {
   line-height: 1.65;
   color: var(--text);
   margin: 10px 0;
@@ -640,7 +635,7 @@ body {
   font-family: var(--mono);
 }
 
-.problem-subhead {
+.item-subhead {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -688,6 +683,15 @@ body {
   padding-left: 20px;
   color: var(--text-dim);
   line-height: 1.9;
+}
+
+.item-hint {
+  margin: 18px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
 }
 
 .toggle {
@@ -864,27 +868,26 @@ body {
 /* Responsive -------------------------------------------------------------- */
 
 @media (max-width: 1200px) {
-  .workspace-practice {
+  .workspace {
     grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.2fr);
   }
-  .workspace-practice .pane-viz {
+  .workspace .pane-viz {
     grid-column: 1 / -1;
     min-height: 46vh;
   }
 }
 
 @media (max-width: 900px) {
-  .workspace,
-  .workspace-practice {
+  .workspace {
     grid-template-columns: 1fr;
   }
   .pane-code {
     min-height: 60vh;
   }
-  .workspace-practice .pane-viz {
+  .workspace .pane-viz {
     grid-column: auto;
   }
-  .pane-problem {
+  .pane-item {
     max-height: 50vh;
   }
 }

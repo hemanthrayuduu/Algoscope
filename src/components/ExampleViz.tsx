@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import type { Language, Step, VizValue } from '../engine/types';
-import type { Problem } from '../problems/types';
+import type { LibraryItem } from '../library/types';
 import { Visualizer } from './Visualizer';
 
-/** Converts raw JSON example data into the shared value model. */
+/** Converts raw JSON argument data into the shared value model. */
 function toVizValue(value: unknown): VizValue {
   if (value === null || value === undefined) return null;
   if (Array.isArray(value)) return value.map(toVizValue);
@@ -16,13 +16,15 @@ function toVizValue(value: unknown): VizValue {
 }
 
 /**
- * Reads parameter names from the reference solution so the example renders with
- * the same labels the problem statement uses (`nums`, `target`) rather than
- * positional placeholders.
+ * Reads parameter names from the item's code so the preview renders with the
+ * same labels the statement uses (`nums`, `target`) rather than positional
+ * placeholders.
  */
-function parameterNames(problem: Problem, language: Language): string[] {
-  const source = problem.referenceSolution[language];
-  const entry = problem.entryFunction[language];
+function parameterNames(item: LibraryItem, language: Language): string[] {
+  const variant = item.languages[language];
+  if (!variant) return [];
+  const source = variant.referenceSolution ?? variant.code;
+  const entry = variant.entryFunction;
   const pattern =
     language === 'python'
       ? new RegExp(`def\\s+${entry}\\s*\\(([^)]*)\\)`)
@@ -36,33 +38,44 @@ function parameterNames(problem: Problem, language: Language): string[] {
 }
 
 interface Props {
-  problem: Problem;
+  item: LibraryItem;
   language: Language;
-  exampleIndex: number;
+  argsJson: string;
 }
 
 /**
- * Draws a problem's example input with the same renderers used for execution
- * steps, so the shape of the data is visible before any code is written.
+ * Draws the input the code is about to run on, using the same renderers as an
+ * execution step. Shown before anything has been run, so the shape of the data
+ * is visible from the moment an item is opened.
  */
-export function ExampleViz({ problem, language, exampleIndex }: Props) {
-  const step = useMemo<Step>(() => {
-    const example = problem.examples[exampleIndex] ?? problem.examples[0];
-    const names = parameterNames(problem, language);
+export function ExampleViz({ item, language, argsJson }: Props) {
+  const step = useMemo<Step | null>(() => {
+    let args: unknown[];
+    try {
+      const parsed = JSON.parse(argsJson || '[]');
+      args = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return null;
+    }
+    const names = parameterNames(item, language);
     const variables: Record<string, VizValue> = {};
-    example.args.forEach((arg, i) => {
+    args.forEach((arg, i) => {
       variables[names[i] ?? `arg${i + 1}`] = toVizValue(arg);
     });
     return { line: 0, variables, callStack: [], stdout: '' };
-  }, [problem, language, exampleIndex]);
+  }, [item, language, argsJson]);
+
+  const expected = item.examples?.[0]?.outputLabel;
 
   return (
     <div className="example-viz">
-      <div className="example-viz-label">Example input</div>
-      <Visualizer step={step} prevStep={null} />
-      <div className="example-viz-expected">
-        Expected output: <code>{(problem.examples[exampleIndex] ?? problem.examples[0]).outputLabel}</code>
-      </div>
+      <div className="example-viz-label">Input · run your code to watch it change</div>
+      {step ? <Visualizer step={step} prevStep={null} /> : <div className="viz-empty">Arguments aren't valid JSON.</div>}
+      {expected && (
+        <div className="example-viz-expected">
+          Expected output: <code>{expected}</code>
+        </div>
+      )}
     </div>
   );
 }
