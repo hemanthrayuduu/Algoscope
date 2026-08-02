@@ -1,20 +1,21 @@
-// The built-in problem set.
+// Judgeable items: a statement, constraints, and test cases.
 //
-// Every problem ships a reference solution in both languages. Those solutions
-// are the source of truth for expected outputs (see judge/judge.ts) and are
-// themselves verified by the test suite, so a malformed problem fails CI rather
-// than silently marking correct submissions wrong.
+// Every challenge ships a reference solution in both languages. Those are the
+// source of truth for expected outputs (see judge/judge.ts) and are themselves
+// verified by the test suite, so a malformed challenge fails CI rather than
+// silently marking correct submissions wrong.
 //
-// The JavaScript reference solutions deliberately stay inside the subset the
-// built-in interpreter supports (no classes, no try/catch) so that what we ship
-// is always runnable by the same engine users' code runs on.
+// The JavaScript reference solutions stay inside the subset the built-in
+// interpreter supports (no classes, no try/catch) so that what we ship is
+// always runnable by the same engine users' code runs on.
 
-import type { Problem } from './types';
+import type { LibraryItem } from './types';
 
-export const PROBLEMS: Problem[] = [
+export const CHALLENGES: LibraryItem[] = [
   {
     id: 'two-sum',
     title: 'Two Sum',
+    kind: 'challenge',
     difficulty: 'Easy',
     topics: ['Array', 'Hash Map'],
     description:
@@ -29,18 +30,15 @@ export const PROBLEMS: Problem[] = [
       },
       { args: [[3, 2, 4], 6], inputLabel: 'nums = [3,2,4], target = 6', outputLabel: '[1,2]' },
     ],
-    entryFunction: { javascript: 'twoSum', python: 'two_sum' },
-    starterCode: {
-      javascript: `function twoSum(nums, target) {
+    previewArgs: '[[2,7,11,15],9]',
+    languages: {
+      javascript: {
+        entryFunction: 'twoSum',
+        code: `function twoSum(nums, target) {
   // Return the indices of the two numbers that add up to target.
 
 }`,
-      python: `def two_sum(nums, target):
-    # Return the indices of the two numbers that add up to target.
-    pass`,
-    },
-    referenceSolution: {
-      javascript: `function twoSum(nums, target) {
+        referenceSolution: `function twoSum(nums, target) {
   const seen = new Map();
   for (let i = 0; i < nums.length; i++) {
     const complement = target - nums[i];
@@ -51,7 +49,13 @@ export const PROBLEMS: Problem[] = [
   }
   return [];
 }`,
-      python: `def two_sum(nums, target):
+      },
+      python: {
+        entryFunction: 'two_sum',
+        code: `def two_sum(nums, target):
+    # Return the indices of the two numbers that add up to target.
+    pass`,
+        referenceSolution: `def two_sum(nums, target):
     seen = {}
     for i, value in enumerate(nums):
         complement = target - value
@@ -59,6 +63,7 @@ export const PROBLEMS: Problem[] = [
             return [seen[complement], i]
         seen[value] = i
     return []`,
+      },
     },
     // Either ordering of the index pair is correct.
     compare: 'unordered',
@@ -78,6 +83,7 @@ export const PROBLEMS: Problem[] = [
   {
     id: 'binary-search',
     title: 'Binary Search',
+    kind: 'challenge',
     difficulty: 'Easy',
     topics: ['Array', 'Binary Search'],
     description:
@@ -97,18 +103,15 @@ export const PROBLEMS: Problem[] = [
         explanation: '2 is not in the array.',
       },
     ],
-    entryFunction: { javascript: 'search', python: 'search' },
-    starterCode: {
-      javascript: `function search(nums, target) {
+    previewArgs: '[[-1,0,3,5,9,12],9]',
+    languages: {
+      javascript: {
+        entryFunction: 'search',
+        code: `function search(nums, target) {
   // Return the index of target, or -1 if it isn't present.
 
 }`,
-      python: `def search(nums, target):
-    # Return the index of target, or -1 if it isn't present.
-    pass`,
-    },
-    referenceSolution: {
-      javascript: `function search(nums, target) {
+        referenceSolution: `function search(nums, target) {
   let lo = 0;
   let hi = nums.length - 1;
   while (lo <= hi) {
@@ -119,7 +122,13 @@ export const PROBLEMS: Problem[] = [
   }
   return -1;
 }`,
-      python: `def search(nums, target):
+      },
+      python: {
+        entryFunction: 'search',
+        code: `def search(nums, target):
+    # Return the index of target, or -1 if it isn't present.
+    pass`,
+        referenceSolution: `def search(nums, target):
     lo = 0
     hi = len(nums) - 1
     while lo <= hi:
@@ -131,6 +140,7 @@ export const PROBLEMS: Problem[] = [
         else:
             hi = mid - 1
     return -1`,
+      },
     },
     compare: 'exact',
     testCases: [
@@ -149,6 +159,7 @@ export const PROBLEMS: Problem[] = [
   {
     id: 'valid-parentheses',
     title: 'Valid Parentheses',
+    kind: 'challenge',
     difficulty: 'Easy',
     topics: ['String', 'Stack'],
     description:
@@ -159,18 +170,15 @@ export const PROBLEMS: Problem[] = [
       { args: ['(]'], inputLabel: 's = "(]"', outputLabel: 'false', explanation: 'Brackets close in the wrong order.' },
       { args: ['([{}])'], inputLabel: 's = "([{}])"', outputLabel: 'true' },
     ],
-    entryFunction: { javascript: 'isValid', python: 'is_valid' },
-    starterCode: {
-      javascript: `function isValid(s) {
+    previewArgs: '["([{}])"]',
+    languages: {
+      javascript: {
+        entryFunction: 'isValid',
+        code: `function isValid(s) {
   // Return true if every bracket is closed correctly.
 
 }`,
-      python: `def is_valid(s):
-    # Return True if every bracket is closed correctly.
-    pass`,
-    },
-    referenceSolution: {
-      javascript: `function isValid(s) {
+        referenceSolution: `function isValid(s) {
   const stack = [];
   const pairs = { ')': '(', ']': '[', '}': '{' };
   for (const ch of s) {
@@ -183,7 +191,13 @@ export const PROBLEMS: Problem[] = [
   }
   return stack.length === 0;
 }`,
-      python: `def is_valid(s):
+      },
+      python: {
+        entryFunction: 'is_valid',
+        code: `def is_valid(s):
+    # Return True if every bracket is closed correctly.
+    pass`,
+        referenceSolution: `def is_valid(s):
     stack = []
     pairs = {')': '(', ']': '[', '}': '{'}
     for ch in s:
@@ -195,6 +209,7 @@ export const PROBLEMS: Problem[] = [
             if stack.pop() != pairs[ch]:
                 return False
     return len(stack) == 0`,
+      },
     },
     compare: 'exact',
     testCases: [
@@ -215,6 +230,7 @@ export const PROBLEMS: Problem[] = [
   {
     id: 'reverse-linked-list',
     title: 'Reverse Linked List',
+    kind: 'challenge',
     difficulty: 'Easy',
     topics: ['Linked List'],
     description:
@@ -229,9 +245,11 @@ export const PROBLEMS: Problem[] = [
       },
       { args: [[1, 2]], inputLabel: 'values = [1,2]', outputLabel: '2 -> 1' },
     ],
-    entryFunction: { javascript: 'solve', python: 'solve' },
-    starterCode: {
-      javascript: `function buildList(values) {
+    previewArgs: '[[1,2,3,4,5]]',
+    languages: {
+      javascript: {
+        entryFunction: 'solve',
+        code: `function buildList(values) {
   let head = null;
   for (let i = values.length - 1; i >= 0; i--) {
     head = { val: values[i], next: head };
@@ -247,26 +265,7 @@ function reverseList(head) {
 function solve(values) {
   return reverseList(buildList(values));
 }`,
-      python: `class ListNode:
-    def __init__(self, val, nxt=None):
-        self.val = val
-        self.next = nxt
-
-def build_list(values):
-    head = None
-    for v in reversed(values):
-        head = ListNode(v, head)
-    return head
-
-def reverse_list(head):
-    # Reverse the list and return the new head.
-    pass
-
-def solve(values):
-    return reverse_list(build_list(values))`,
-    },
-    referenceSolution: {
-      javascript: `function buildList(values) {
+        referenceSolution: `function buildList(values) {
   let head = null;
   for (let i = values.length - 1; i >= 0; i--) {
     head = { val: values[i], next: head };
@@ -288,7 +287,27 @@ function reverseList(head) {
 function solve(values) {
   return reverseList(buildList(values));
 }`,
-      python: `class ListNode:
+      },
+      python: {
+        entryFunction: 'solve',
+        code: `class ListNode:
+    def __init__(self, val, nxt=None):
+        self.val = val
+        self.next = nxt
+
+def build_list(values):
+    head = None
+    for v in reversed(values):
+        head = ListNode(v, head)
+    return head
+
+def reverse_list(head):
+    # Reverse the list and return the new head.
+    pass
+
+def solve(values):
+    return reverse_list(build_list(values))`,
+        referenceSolution: `class ListNode:
     def __init__(self, val, nxt=None):
         self.val = val
         self.next = nxt
@@ -310,6 +329,7 @@ def reverse_list(head):
 
 def solve(values):
     return reverse_list(build_list(values))`,
+      },
     },
     compare: 'exact',
     // Returned value is a node chain; flatten to an array so JS objects and
@@ -330,6 +350,7 @@ def solve(values):
   {
     id: 'max-depth-binary-tree',
     title: 'Maximum Depth of Binary Tree',
+    kind: 'challenge',
     difficulty: 'Easy',
     topics: ['Tree', 'Recursion'],
     description:
@@ -344,9 +365,11 @@ def solve(values):
       },
       { args: [[1, null, 2]], inputLabel: 'values = [1,null,2]', outputLabel: '2' },
     ],
-    entryFunction: { javascript: 'solve', python: 'solve' },
-    starterCode: {
-      javascript: `function buildTree(values) {
+    previewArgs: '[[3,9,20,null,null,15,7]]',
+    languages: {
+      javascript: {
+        entryFunction: 'solve',
+        code: `function buildTree(values) {
   if (values.length === 0) return null;
   const nodes = [];
   for (const v of values) {
@@ -370,7 +393,36 @@ function maxDepth(root) {
 function solve(values) {
   return maxDepth(buildTree(values));
 }`,
-      python: `class TreeNode:
+        referenceSolution: `function buildTree(values) {
+  if (values.length === 0) return null;
+  const nodes = [];
+  for (const v of values) {
+    nodes.push(v === null ? null : { val: v, left: null, right: null });
+  }
+  let child = 1;
+  for (let i = 0; i < nodes.length; i++) {
+    if (nodes[i] !== null) {
+      if (child < nodes.length) { nodes[i].left = nodes[child]; child++; }
+      if (child < nodes.length) { nodes[i].right = nodes[child]; child++; }
+    }
+  }
+  return nodes[0];
+}
+
+function maxDepth(root) {
+  if (root === null) return 0;
+  const left = maxDepth(root.left);
+  const right = maxDepth(root.right);
+  return 1 + Math.max(left, right);
+}
+
+function solve(values) {
+  return maxDepth(buildTree(values));
+}`,
+      },
+      python: {
+        entryFunction: 'solve',
+        code: `class TreeNode:
     def __init__(self, val):
         self.val = val
         self.left = None
@@ -397,35 +449,7 @@ def max_depth(root):
 
 def solve(values):
     return max_depth(build_tree(values))`,
-    },
-    referenceSolution: {
-      javascript: `function buildTree(values) {
-  if (values.length === 0) return null;
-  const nodes = [];
-  for (const v of values) {
-    nodes.push(v === null ? null : { val: v, left: null, right: null });
-  }
-  let child = 1;
-  for (let i = 0; i < nodes.length; i++) {
-    if (nodes[i] !== null) {
-      if (child < nodes.length) { nodes[i].left = nodes[child]; child++; }
-      if (child < nodes.length) { nodes[i].right = nodes[child]; child++; }
-    }
-  }
-  return nodes[0];
-}
-
-function maxDepth(root) {
-  if (root === null) return 0;
-  const left = maxDepth(root.left);
-  const right = maxDepth(root.right);
-  return 1 + Math.max(left, right);
-}
-
-function solve(values) {
-  return maxDepth(buildTree(values));
-}`,
-      python: `class TreeNode:
+        referenceSolution: `class TreeNode:
     def __init__(self, val):
         self.val = val
         self.left = None
@@ -453,6 +477,7 @@ def max_depth(root):
 
 def solve(values):
     return max_depth(build_tree(values))`,
+      },
     },
     compare: 'exact',
     testCases: [
@@ -470,6 +495,7 @@ def solve(values):
   {
     id: 'merge-intervals',
     title: 'Merge Intervals',
+    kind: 'challenge',
     difficulty: 'Medium',
     topics: ['Array', 'Sorting'],
     description:
@@ -501,18 +527,15 @@ def solve(values):
         explanation: 'Intervals that just touch are still considered overlapping.',
       },
     ],
-    entryFunction: { javascript: 'merge', python: 'merge' },
-    starterCode: {
-      javascript: `function merge(intervals) {
+    previewArgs: '[[[1,3],[2,6],[8,10],[15,18]]]',
+    languages: {
+      javascript: {
+        entryFunction: 'merge',
+        code: `function merge(intervals) {
   // Merge all overlapping intervals.
 
 }`,
-      python: `def merge(intervals):
-    # Merge all overlapping intervals.
-    pass`,
-    },
-    referenceSolution: {
-      javascript: `function merge(intervals) {
+        referenceSolution: `function merge(intervals) {
   const sorted = intervals.slice().sort(function (a, b) {
     return a[0] - b[0];
   });
@@ -531,7 +554,13 @@ def solve(values):
   }
   return result;
 }`,
-      python: `def merge(intervals):
+      },
+      python: {
+        entryFunction: 'merge',
+        code: `def merge(intervals):
+    # Merge all overlapping intervals.
+    pass`,
+        referenceSolution: `def merge(intervals):
     result = []
     for interval in sorted(intervals, key=lambda x: x[0]):
         if result and interval[0] <= result[-1][1]:
@@ -539,6 +568,7 @@ def solve(values):
         else:
             result.append([interval[0], interval[1]])
     return result`,
+      },
     },
     compare: 'exact',
     testCases: [
@@ -627,9 +657,3 @@ function flattenLinkedList(value: unknown): unknown {
   }
   return out;
 }
-
-export function getProblem(id: string): Problem | undefined {
-  return PROBLEMS.find((p) => p.id === id);
-}
-
-export const DEFAULT_PROBLEM_ID = 'two-sum';

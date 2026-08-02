@@ -8,7 +8,7 @@
 //      `{ __kind: 'map', entries }`, so comparison happens after unwrapping
 //      those tags into plain JS values.
 
-import type { CompareMode } from '../problems/types';
+import type { CompareMode } from '../library/types';
 
 /**
  * Unwraps the tagged VizValue model into plain JS values so that results

@@ -1,4 +1,4 @@
-// Cross-language check for the problem library.
+// Cross-language check for the library.
 //
 // The Vitest suite covers the JavaScript reference solutions, but Python runs
 // on Pyodide in the browser and isn't available there. This script closes that
@@ -43,10 +43,11 @@ function fail(message) {
   process.exitCode = 1;
 }
 
-const { PROBLEMS } = await loadModule('src/problems/library.ts', { './types': './types.mjs' });
+const { CHALLENGES } = await loadModule('src/library/challenges.ts', { './types': './types.mjs' });
+const { DEMOS } = await loadModule('src/library/demos.ts', { './types': './types.mjs' });
 const { runJavaScript } = await loadModule('src/engine/jsInterpreter.ts', { './types': './types.mjs' });
 const { resultsMatch, formatValue } = await loadModule('src/judge/compare.ts', {
-  '../problems/types': './types.mjs',
+  '../library/types': './types.mjs',
 });
 const { TRACER_SOURCE } = await loadModule('src/engine/python/tracer.ts');
 
@@ -79,41 +80,76 @@ function runJs(code, entryFunction, args) {
 }
 
 let checked = 0;
-console.log(`Checking ${PROBLEMS.length} problems against python3...\n`);
 
-for (const problem of PROBLEMS) {
-  const normalize = problem.normalize ?? ((v) => v);
-  let problemOk = true;
+console.log(`Checking ${CHALLENGES.length} challenges against python3...\n`);
 
-  for (const testCase of problem.testCases) {
+for (const item of CHALLENGES) {
+  const normalize = item.normalize ?? ((v) => v);
+  const js = item.languages.javascript;
+  const py = item.languages.python;
+  let itemOk = true;
+
+  for (const testCase of item.testCases) {
     const label = JSON.stringify(testCase.args);
 
-    const jsResult = runJs(problem.referenceSolution.javascript, problem.entryFunction.javascript, testCase.args);
+    const jsResult = runJs(js.referenceSolution, js.entryFunction, testCase.args);
     if (jsResult.error) {
-      fail(`${problem.id}: JS reference failed on ${label}: ${jsResult.error}`);
-      problemOk = false;
+      fail(`${item.id}: JS reference failed on ${label}: ${jsResult.error}`);
+      itemOk = false;
       continue;
     }
 
-    const pyResult = runPython(problem.referenceSolution.python, problem.entryFunction.python, testCase.args);
+    const pyResult = runPython(py.referenceSolution, py.entryFunction, testCase.args);
     if (pyResult.error) {
-      fail(`${problem.id}: Python reference failed on ${label}: ${pyResult.error}`);
-      problemOk = false;
+      fail(`${item.id}: Python reference failed on ${label}: ${pyResult.error}`);
+      itemOk = false;
       continue;
     }
 
     const jsValue = normalize(jsResult.returnValue);
     const pyValue = normalize(pyResult.returnValue);
-    if (!resultsMatch(pyValue, jsValue, problem.compare)) {
+    if (!resultsMatch(pyValue, jsValue, item.compare)) {
       fail(
-        `${problem.id}: languages disagree on ${label}\n    JS:     ${formatValue(jsValue)}\n    Python: ${formatValue(pyValue)}`,
+        `${item.id}: languages disagree on ${label}\n    JS:     ${formatValue(jsValue)}\n    Python: ${formatValue(pyValue)}`,
       );
-      problemOk = false;
+      itemOk = false;
     }
     checked++;
   }
 
-  if (problemOk) console.log(`  ✓ ${problem.title} (${problem.testCases.length} cases)`);
+  if (itemOk) console.log(`  ✓ ${item.title} (${item.testCases.length} cases)`);
+}
+
+// Demos have no test cases, but both language versions still have to run and
+// agree on their preview input — otherwise switching language silently shows
+// something different.
+console.log(`\nChecking ${DEMOS.length} demos...\n`);
+
+for (const item of DEMOS) {
+  const args = JSON.parse(item.previewArgs);
+  const js = item.languages.javascript;
+  const py = item.languages.python;
+
+  const jsResult = runJs(js.code, js.entryFunction, args);
+  if (jsResult.error) {
+    fail(`${item.id}: JS demo failed: ${jsResult.error}`);
+    continue;
+  }
+
+  const pyResult = runPython(py.code, py.entryFunction, args);
+  if (pyResult.error) {
+    fail(`${item.id}: Python demo failed: ${pyResult.error}`);
+    continue;
+  }
+
+  if (!resultsMatch(pyResult.returnValue, jsResult.returnValue, 'exact')) {
+    fail(
+      `${item.id}: languages disagree\n    JS:     ${formatValue(jsResult.returnValue)}\n    Python: ${formatValue(pyResult.returnValue)}`,
+    );
+    continue;
+  }
+  checked++;
+  console.log(`  ✓ ${item.title}`);
 }
 
 if (process.exitCode) {
