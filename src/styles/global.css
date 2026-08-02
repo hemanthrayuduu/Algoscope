@@ -1,4 +1,7 @@
 :root {
+  /* Tells the browser which palette to use for native UI it draws itself —
+     scrollbars, select popups, form controls — so they match the app theme. */
+  color-scheme: light;
   --bg: #f5f6fa;
   --surface: #ffffff;
   --surface-2: #f0f2f7;
@@ -24,6 +27,7 @@
 }
 
 [data-theme='dark'] {
+  color-scheme: dark;
   --bg: #0e1017;
   --surface: #171a24;
   --surface-2: #1e222f;
@@ -232,7 +236,8 @@ body {
 }
 
 .text-input,
-.example-picker {
+.example-picker,
+.problem-picker {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -243,15 +248,20 @@ body {
   width: 100%;
 }
 
-.example-picker {
+.example-picker,
+.problem-picker {
   font-family: var(--sans);
   font-weight: 600;
   cursor: pointer;
   align-self: stretch;
+  /* Without this the native control keeps its own light background in dark
+     mode, which is the one element that gave the theme away. */
+  color-scheme: light dark;
 }
 
 .text-input:focus,
-.example-picker:focus {
+.example-picker:focus,
+.problem-picker:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
@@ -575,12 +585,7 @@ body {
   padding: 16px;
 }
 
-.problem-picker {
-  width: 100%;
-  font-family: var(--sans);
-  font-weight: 600;
-  cursor: pointer;
-}
+/* Base styling is shared with the other inputs above. */
 
 .problem-heading {
   display: flex;
