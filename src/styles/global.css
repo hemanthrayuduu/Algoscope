@@ -1050,6 +1050,18 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.viz-error {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  background: rgba(217, 43, 43, 0.08);
+  border-left: 3px solid var(--warn);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+  word-break: break-word;
+}
+
 .viz-cta {
   margin: 18px 0 0;
   padding: 12px 14px;

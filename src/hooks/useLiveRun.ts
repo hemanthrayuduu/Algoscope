@@ -28,13 +28,28 @@ interface Params {
   entryFunction: string;
   argsJson: string;
   enabled: boolean;
+  /**
+   * Identifies what is loaded. Retaining the last good run is right while
+   * editing one thing, but wrong the moment the context changes: keeping it
+   * across a switch showed the previous item's trace under the new item's
+   * title. Changing this key drops the retained result.
+   */
+  resetKey: string;
 }
 
-export function useLiveRun({ code, language, entryFunction, argsJson, enabled }: Params): LiveRunState {
+export function useLiveRun({ code, language, entryFunction, argsJson, enabled, resetKey }: Params): LiveRunState {
   const [state, setState] = useState<LiveRunState>({ result: null, running: false, staleReason: null });
 
   const generation = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    // Invalidate anything in flight so a run started for the previous context
+    // can't land afterwards and look like it belongs to this one.
+    generation.current++;
+    abortRef.current?.abort();
+    setState({ result: null, running: false, staleReason: null });
+  }, [resetKey]);
 
   useEffect(() => {
     if (!enabled || !code.trim() || !entryFunction.trim()) return;

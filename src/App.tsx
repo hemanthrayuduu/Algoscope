@@ -57,6 +57,7 @@ export function App() {
     entryFunction,
     argsJson,
     enabled: liveEnabled && !judging,
+    resetKey: `${itemId}:${language}`,
   });
 
   const activeResult = manualResult ?? live.result;
@@ -99,6 +100,19 @@ export function App() {
       setStepIndex(live.result.steps.length ? 0 : -1);
     }
   }, [live.result, manualResult]);
+
+  // Keep the index inside the current trace. Without this the counter could
+  // read "1 / 8" while the index was still -1, so it claimed to be showing a
+  // step while the panel rendered nothing.
+  useEffect(() => {
+    if (steps.length === 0) {
+      if (stepIndex !== -1) setStepIndex(-1);
+    } else if (stepIndex < 0) {
+      setStepIndex(0);
+    } else if (stepIndex > steps.length - 1) {
+      setStepIndex(steps.length - 1);
+    }
+  }, [steps.length, stepIndex]);
 
   useEffect(() => {
     if (!playing) return;
@@ -383,7 +397,16 @@ export function App() {
             ) : (
               <>
                 <ExampleViz item={item} language={language} argsJson={argsJson} />
-                {judgeable && !showingSolution && (
+                {/* A failure with nothing retained is a real problem — a broken
+                    runtime, not code mid-edit — so say what happened rather
+                    than leaving it to a tooltip. */}
+                {live.staleReason && (
+                  <p className="viz-error">
+                    <strong>Couldn’t run this.</strong> {live.staleReason}
+                    {language === 'python' && ' Python runs on Pyodide, which is downloaded on first use — check your connection if this persists.'}
+                  </p>
+                )}
+                {!live.staleReason && judgeable && !showingSolution && (
                   <p className="viz-cta">
                     Nothing to trace yet — the starter code is empty. Write a solution and it will animate as
                     you type, or press <strong>👁 Solution</strong> to watch a working one run.
