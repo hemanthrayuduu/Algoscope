@@ -6,12 +6,13 @@ import { Visualizer } from './components/Visualizer';
 import { OutputPanel } from './components/OutputPanel';
 import { ItemPanel } from './components/ItemPanel';
 import { LibraryPicker } from './components/LibraryPicker';
+import { LibraryBrowser } from './components/LibraryBrowser';
 import { ResultsPanel } from './components/ResultsPanel';
 import { ExampleViz } from './components/ExampleViz';
 import { run } from './engine/runner';
 import { judge, type JudgeReport } from './judge/judge';
 import type { Language, RunResult } from './engine/types';
-import { DEFAULT_ITEM_ID, LIBRARY, getItem } from './library';
+import { DEFAULT_ITEM_ID, getItem, neighbours } from './library';
 import { isJudgeable, type LibraryItem } from './library/types';
 import { useLiveRun } from './hooks/useLiveRun';
 import { applyTheme, getInitialTheme, type Theme } from './lib/theme';
@@ -32,6 +33,7 @@ export function App() {
   const [judging, setJudging] = useState(false);
   const [solvedIds, setSolvedIds] = useState<Set<string>>(new Set());
   const [liveEnabled, setLiveEnabled] = useState(true);
+  const [browserOpen, setBrowserOpen] = useState(false);
 
   const [manualResult, setManualResult] = useState<RunResult | null>(null);
   const [stepIndex, setStepIndex] = useState(-1);
@@ -42,6 +44,7 @@ export function App() {
   const [shareLabel, setShareLabel] = useState('Share');
 
   const item = useMemo(() => getItem(itemId), [itemId]);
+  const step = useMemo(() => neighbours(itemId, language), [itemId, language]);
   const judgeable = isJudgeable(item);
   const judgeAbort = useRef<AbortController | null>(null);
 
@@ -203,13 +206,34 @@ export function App() {
 
       <main className="workspace">
         <section className="pane pane-item">
-          <div className="toolbar">
-            <LibraryPicker
-              currentId={itemId}
-              language={language}
-              solvedIds={solvedIds}
-              onSelect={(next) => loadItem(next)}
-            />
+          <div className="toolbar toolbar-stacked">
+            <button className="btn btn-primary browse-btn" onClick={() => setBrowserOpen(true)}>
+              ☰ Browse library
+            </button>
+            <div className="switcher">
+              <button
+                className="btn switcher-step"
+                onClick={() => step.prev && loadItem(step.prev)}
+                disabled={!step.prev}
+                title="Previous item"
+              >
+                ‹
+              </button>
+              <LibraryPicker
+                currentId={itemId}
+                language={language}
+                solvedIds={solvedIds}
+                onSelect={(next) => loadItem(next)}
+              />
+              <button
+                className="btn switcher-step"
+                onClick={() => step.next && loadItem(step.next)}
+                disabled={!step.next}
+                title="Next item"
+              >
+                ›
+              </button>
+            </div>
           </div>
           <div className="item-scroll">
             <ItemPanel item={item} />
@@ -227,7 +251,7 @@ export function App() {
                 spellCheck={false}
               />
             </div>
-            {LIBRARY.length > 0 && item.kind === 'scratch' && (
+            {item.kind === 'scratch' && (
               <div className="field">
                 <label>Run function</label>
                 <input
@@ -323,6 +347,18 @@ export function App() {
           <OutputPanel result={activeResult} step={currentStep} status={running ? status : ''} />
         </section>
       </main>
+
+      <LibraryBrowser
+        open={browserOpen}
+        language={language}
+        currentId={itemId}
+        solvedIds={solvedIds}
+        onSelect={(next) => {
+          loadItem(next);
+          setBrowserOpen(false);
+        }}
+        onClose={() => setBrowserOpen(false)}
+      />
     </div>
   );
 }

@@ -713,6 +713,12 @@ body {
 
 /* Item switcher ------------------------------------------------------------ */
 
+.toolbar-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
 .switcher {
   display: flex;
   gap: 6px;
