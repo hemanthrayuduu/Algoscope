@@ -11,7 +11,7 @@
 // the Python code against real CPython.
 
 import { describe, expect, it } from 'vitest';
-import { CHALLENGES, DEMOS, LIBRARY, SCRATCH, getItem, groupedFor } from './index';
+import { CHALLENGES, DEMOS, LIBRARY, SCRATCH, getItem, groupedFor, neighbours, searchLibrary } from './index';
 import { isJudgeable } from './types';
 import { judge } from '../judge/judge';
 import { resultsMatch } from '../judge/compare';
@@ -201,6 +201,70 @@ describe('judge behaviour', () => {
     const flattened = reverseList.normalize!(chain);
     expect(flattened).toEqual([1, 2]);
     expect(resultsMatch(flattened, [1, 2], 'exact')).toBe(true);
+  });
+});
+
+describe('search', () => {
+  it('returns everything for an empty query', () => {
+    expect(searchLibrary('', 'javascript')).toHaveLength(LIBRARY.length);
+    expect(searchLibrary('   ', 'javascript')).toHaveLength(LIBRARY.length);
+  });
+
+  it('matches on title', () => {
+    const results = searchLibrary('two sum', 'javascript');
+    expect(results.map((r) => r.id)).toContain('two-sum');
+  });
+
+  it('matches on topic', () => {
+    const results = searchLibrary('tree', 'javascript').map((r) => r.id);
+    expect(results).toContain('max-depth-binary-tree');
+    expect(results).toContain('build-bst');
+  });
+
+  it('matches on difficulty', () => {
+    const results = searchLibrary('medium', 'javascript');
+    expect(results.every((r) => r.difficulty === 'Medium' || r.description.toLowerCase().includes('medium'))).toBe(true);
+    expect(results.map((r) => r.id)).toContain('merge-intervals');
+  });
+
+  it('narrows when several terms are given', () => {
+    const broad = searchLibrary('sorting', 'javascript');
+    const narrow = searchLibrary('sorting recursion', 'javascript');
+    expect(narrow.length).toBeLessThan(broad.length);
+    expect(narrow.map((r) => r.id)).toContain('quicksort');
+  });
+
+  it('is case-insensitive and returns nothing for nonsense', () => {
+    expect(searchLibrary('BINARY', 'javascript').length).toBeGreaterThan(0);
+    expect(searchLibrary('zzzznotathing', 'javascript')).toHaveLength(0);
+  });
+
+  it('only returns items available in the requested language', () => {
+    for (const language of ['javascript', 'python'] as const) {
+      for (const item of searchLibrary('', language)) {
+        expect(item.languages[language]).toBeTruthy();
+      }
+    }
+  });
+});
+
+describe('neighbours', () => {
+  it('has no previous item at the start and no next at the end', () => {
+    const available = LIBRARY.filter((i) => i.languages.javascript);
+    expect(neighbours(available[0].id, 'javascript').prev).toBeNull();
+    expect(neighbours(available[available.length - 1].id, 'javascript').next).toBeNull();
+  });
+
+  it('steps forward and back through the library in order', () => {
+    const available = LIBRARY.filter((i) => i.languages.javascript);
+    const second = available[1];
+    const { prev, next } = neighbours(second.id, 'javascript');
+    expect(prev?.id).toBe(available[0].id);
+    expect(next?.id).toBe(available[2].id);
+  });
+
+  it('returns nothing for an unknown id', () => {
+    expect(neighbours('nope', 'javascript')).toEqual({ prev: null, next: null });
   });
 });
 
