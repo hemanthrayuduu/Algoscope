@@ -1049,16 +1049,96 @@ body {
 }
 
 @media (max-width: 900px) {
+  /* On a phone the three panes stack, and pinning the app to the viewport
+     height squeezed them until the first one collapsed to a couple of pixels —
+     which hid the library switcher entirely. Let the document scroll instead
+     and give each pane a real height of its own. */
+  html,
+  body,
+  #root {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .app {
+    height: auto;
+    min-height: 100%;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
+    grid-auto-rows: min-content;
+    min-height: 0;
   }
-  .pane-code {
-    min-height: 60vh;
-  }
+
   .workspace .pane-viz {
     grid-column: auto;
   }
+
   .pane-item {
-    max-height: 50vh;
+    max-height: none;
+  }
+
+  .item-scroll {
+    overflow-y: visible;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .pane-code {
+    min-height: 70vh;
+  }
+
+  .pane-viz {
+    min-height: 60vh;
+  }
+
+  /* The header ran off the right edge on a phone, clipping Share and the
+     theme toggle. Let it wrap onto a second row instead. */
+  .app-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .brand-tag {
+    display: none;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .segment {
+    padding: 6px 10px;
+  }
+
+  /* Controls wrap badly at phone widths otherwise. */
+  .controls {
+    gap: 8px;
+  }
+
+  .speed {
+    width: 100%;
+  }
+
+  .speed input {
+    flex: 1;
+  }
+
+  .browser {
+    max-height: 88vh;
+  }
+
+  .browser-backdrop {
+    padding: 4vh 10px 10px;
+  }
+
+  .browser-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 }
