@@ -1050,6 +1050,17 @@ body {
   border-top: 1px solid var(--border);
 }
 
+.viz-cta {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
 .example-viz-expected code {
   font-family: var(--mono);
   color: var(--text);

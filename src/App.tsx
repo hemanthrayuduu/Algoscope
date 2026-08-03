@@ -34,6 +34,7 @@ export function App() {
   const [solvedIds, setSolvedIds] = useState<Set<string>>(new Set());
   const [liveEnabled, setLiveEnabled] = useState(true);
   const [browserOpen, setBrowserOpen] = useState(false);
+  const [showingSolution, setShowingSolution] = useState(false);
 
   const [manualResult, setManualResult] = useState<RunResult | null>(null);
   const [stepIndex, setStepIndex] = useState(-1);
@@ -118,11 +119,38 @@ export function App() {
     setCode(variant.code);
     setEntryFunction(variant.entryFunction);
     setArgsJson(next.previewArgs);
+    setShowingSolution(false);
     setManualResult(null);
     setReport(null);
     setStepIndex(-1);
     setPlaying(false);
     setStatus('');
+  }
+
+  /**
+   * Loads the reference solution into the editor. A challenge otherwise starts
+   * as an empty stub, which runs to nothing and makes the visualization look
+   * broken to someone who hasn't written any code yet.
+   */
+  function showSolution() {
+    const variant = item.languages[language];
+    if (!variant?.referenceSolution) return;
+    setCode(variant.referenceSolution);
+    setShowingSolution(true);
+    setManualResult(null);
+    setReport(null);
+    setPlaying(false);
+  }
+
+  /** Puts the starter stub back so the challenge can be attempted. */
+  function resetToStarter() {
+    const variant = item.languages[language];
+    if (!variant) return;
+    setCode(variant.code);
+    setShowingSolution(false);
+    setManualResult(null);
+    setReport(null);
+    setPlaying(false);
   }
 
   function handleLanguageChange(next: Language) {
@@ -267,6 +295,19 @@ export function App() {
               Live
             </label>
             {judgeable && (
+              <button
+                className="btn"
+                onClick={showingSolution ? resetToStarter : showSolution}
+                title={
+                  showingSolution
+                    ? 'Restore the starter code'
+                    : 'Load a working solution so you can watch it run'
+                }
+              >
+                {showingSolution ? '↩ Starter' : '👁 Solution'}
+              </button>
+            )}
+            {judgeable && (
               <button className="btn btn-primary" onClick={handleSubmit} disabled={judging}>
                 {judging ? 'Judging…' : 'Submit'}
               </button>
@@ -340,7 +381,15 @@ export function App() {
             {hasSteps ? (
               <Visualizer step={currentStep} prevStep={prevStep} />
             ) : (
-              <ExampleViz item={item} language={language} argsJson={argsJson} />
+              <>
+                <ExampleViz item={item} language={language} argsJson={argsJson} />
+                {judgeable && !showingSolution && (
+                  <p className="viz-cta">
+                    Nothing to trace yet — the starter code is empty. Write a solution and it will animate as
+                    you type, or press <strong>👁 Solution</strong> to watch a working one run.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
