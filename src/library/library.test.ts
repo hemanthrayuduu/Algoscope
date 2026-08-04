@@ -56,10 +56,16 @@ describe('library structure', () => {
         expect(Object.keys(item.languages).length).toBeGreaterThan(0);
         for (const [language, variant] of Object.entries(item.languages)) {
           expect(variant.code, `${language} code`).toBeTruthy();
-          expect(variant.entryFunction, `${language} entry`).toBeTruthy();
-          // A user who submits without renaming anything should get a real
-          // result, not "function not found".
-          expect(variant.code).toContain(variant.entryFunction);
+          if (item.kind === 'scratch') {
+            // A scratchpad is a plain script: no function to call, so a blank
+            // entry is the correct value rather than a missing one.
+            expect(variant.entryFunction, `${language} entry`).toBe('');
+          } else {
+            expect(variant.entryFunction, `${language} entry`).toBeTruthy();
+            // A user who submits without renaming anything should get a real
+            // result, not "function not found".
+            expect(variant.code).toContain(variant.entryFunction);
+          }
         }
         const args = JSON.parse(item.previewArgs);
         expect(Array.isArray(args)).toBe(true);
@@ -145,18 +151,32 @@ describe('demos', () => {
 });
 
 describe('scratchpad', () => {
-  it('runs out of the box in JavaScript', () => {
+  it('runs out of the box in JavaScript as a script', () => {
     const variant = SCRATCH.languages.javascript!;
-    const result = runJavaScript(
-      {
-        code: variant.code,
-        language: 'javascript',
-        entryFunction: variant.entryFunction,
-        argsJson: SCRATCH.previewArgs,
-      },
-      { collectSteps: false },
-    );
+    const result = runJavaScript({
+      code: variant.code,
+      language: 'javascript',
+      entryFunction: variant.entryFunction,
+      argsJson: SCRATCH.previewArgs,
+    });
     expect(result.error).toBeUndefined();
+    expect(result.steps.length).toBeGreaterThan(0);
+  });
+
+  it('produces variables worth visualizing', () => {
+    // The scratchpad is the front door for bringing your own code, so what it
+    // ships with has to demonstrate the point: an array, a map, some scalars.
+    const variant = SCRATCH.languages.javascript!;
+    const result = runJavaScript({
+      code: variant.code,
+      language: 'javascript',
+      entryFunction: variant.entryFunction,
+      argsJson: '[]',
+    });
+    const last = result.steps[result.steps.length - 1];
+    expect(Array.isArray(last.variables.array)).toBe(true);
+    expect((last.variables.seen as any).__kind).toBe('map');
+    expect(typeof last.variables.total).toBe('number');
   });
 });
 

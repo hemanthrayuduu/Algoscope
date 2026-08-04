@@ -309,6 +309,66 @@ describe('error reporting', () => {
   });
 });
 
+// The visualization is driven by whatever the code does, so code that isn't
+// wrapped in a function has to work too — declaring an array and looping over
+// it is the most basic thing a user can type.
+describe('script mode (no entry function)', () => {
+  const runScript = (code: string) =>
+    runJavaScript({ code, language: 'javascript', entryFunction: '', argsJson: '[]' });
+
+  it('runs top-level code and reports no error', () => {
+    const result = runScript('const array = [1, 2, 3, 4];\nlet total = 0;\nfor (const v of array) { total += v; }');
+    expect(result.error).toBeUndefined();
+    expect(result.steps.length).toBeGreaterThan(0);
+  });
+
+  it('exposes top-level variables in the final step', () => {
+    const result = runScript('const array = [1, 2, 3];\nlet total = 0;\nfor (const v of array) { total += v; }');
+    const last = result.steps[result.steps.length - 1];
+    expect(last.variables.array).toEqual([1, 2, 3]);
+    expect(last.variables.total).toBe(6);
+  });
+
+  it('treats whitespace as blank', () => {
+    const result = runJavaScript({ code: 'let x = 1;', language: 'javascript', entryFunction: '   ', argsJson: '[]' });
+    expect(result.error).toBeUndefined();
+  });
+
+  it('visualizes structures built at the top level', () => {
+    const result = runScript(`const grid = [[1, 2], [3, 4]];
+const node = { val: 1, next: { val: 2, next: null } };
+const seen = new Map();
+seen.set('a', 1);
+const unique = new Set([1, 1, 2]);`);
+    const last = result.steps[result.steps.length - 1];
+    expect(last.variables.grid).toEqual([[1, 2], [3, 4]]);
+    expect((last.variables.node as any).__kind).toBe('object');
+    expect((last.variables.seen as any).__kind).toBe('map');
+    expect((last.variables.unique as any).__kind).toBe('set');
+  });
+
+  it('still runs a named function when one is given', () => {
+    const result = runJavaScript({
+      code: 'function f(n) { return n * 2; }',
+      language: 'javascript',
+      entryFunction: 'f',
+      argsJson: '[21]',
+    });
+    expect(result.returnValue).toBe(42);
+  });
+
+  it('explains how to run as a script when a named function is missing', () => {
+    const result = runJavaScript({
+      code: 'let x = 1;',
+      language: 'javascript',
+      entryFunction: 'nope',
+      argsJson: '[]',
+    });
+    expect(result.error).toMatch(/was not found/);
+    expect(result.error).toMatch(/blank to run the code as a script/);
+  });
+});
+
 describe('step tracing', () => {
   it('records a step per statement with variable state', () => {
     const result = runJavaScript({

@@ -815,15 +815,23 @@ export function runJavaScript(request: RunRequest, options: JsRunOptions = {}): 
     const top = collect(execBlock(interp, ast.body, globalScope));
     if (top.error) return { steps, stdout: interp.output, error: top.error };
 
-    if (!globalScope.has(entryFunction)) {
+    // No entry function means "just run what's here" — a plain script, where
+    // the top-level statements are the program. Requiring a function used to
+    // reject that outright even though the trace had already been captured.
+    const entry = entryFunction.trim();
+    if (!entry) {
+      return { steps, stdout: interp.output, returnValue: toViz(top.value) };
+    }
+
+    if (!globalScope.has(entry)) {
       return {
         steps,
         stdout: interp.output,
-        error: `Function "${entryFunction}" was not found. Check the "Run function" field.`,
+        error: `Function "${entry}" was not found. Leave "Run function" blank to run the code as a script.`,
       };
     }
     // callFunction pushes the entry frame itself; no manual push needed.
-    const run = collect(callFunction(interp, globalScope.get(entryFunction), args));
+    const run = collect(callFunction(interp, globalScope.get(entry), args));
     if (run.error) return { steps, stdout: interp.output, error: run.error };
 
     return { steps, stdout: interp.output, returnValue: toViz(run.value) };

@@ -112,11 +112,16 @@ def _run(code, entry_function, args_json, max_steps, trace=True):
         if trace:
             sys.settrace(tracer)
         exec(compiled, namespace)
-        if entry_function not in namespace:
-            raise NameError('Function "%s" was not found.' % entry_function)
-        fn = namespace[entry_function]
-        result = fn(*args)
-        return_value = serialize(result)
+        # An empty entry function means "run this as a script": the module body
+        # is the program, and its trace is the whole story.
+        entry = (entry_function or "").strip()
+        if entry:
+            if entry not in namespace:
+                raise NameError(
+                    'Function "%s" was not found. Leave the run function blank to run the code as a script.' % entry
+                )
+            result = namespace[entry](*args)
+            return_value = serialize(result)
     except _StepLimit:
         error = "Stopped after %d steps (possible infinite loop)." % max_steps
     except Exception as exc:  # noqa: BLE001 - surface any user error to the UI

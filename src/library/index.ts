@@ -8,32 +8,52 @@ import type { Language } from '../engine/types';
 /** An empty buffer, for when you just want to run something of your own. */
 export const SCRATCH: LibraryItem = {
   id: 'scratch',
-  title: 'Blank scratchpad',
+  title: 'Your own code',
   kind: 'scratch',
   topics: [],
   description:
-    'An empty buffer. Write any function, set its arguments, and watch it run. Everything you type is visualized the same way as the rest of the library.',
+    'Write anything. Declare an array and it is drawn as an array; build a tree and it is drawn as a tree. Every variable you create shows up, and the whole run is stepped through line by line.\n\nNo function is required — this is a plain script. Define one and name it in "Run function" if you would rather trace a call with arguments.',
+  // Unused while the run function is blank, but kept so switching to a
+  // function-style entry has something sensible to start from.
   previewArgs: '[[3,1,4,1,5,9,2,6]]',
   languages: {
     javascript: {
-      entryFunction: 'solve',
-      code: `function solve(input) {
-  // Write anything here, then set the arguments below.
-  let result = 0;
-  for (const value of input) {
-    result += value;
+      // Blank: the code below is a script, not a function to call.
+      entryFunction: '',
+      code: `// Anything you write is visualized. No function needed.
+const array = [5, 3, 8, 1, 9, 2];
+let total = 0;
+let largest = array[0];
+
+for (let i = 0; i < array.length; i++) {
+  total += array[i];
+  if (array[i] > largest) {
+    largest = array[i];
   }
-  return result;
+}
+
+const average = total / array.length;
+const seen = new Map();
+for (const value of array) {
+  seen.set(value, true);
 }`,
     },
     python: {
-      entryFunction: 'solve',
-      code: `def solve(input):
-    # Write anything here, then set the arguments below.
-    result = 0
-    for value in input:
-        result += value
-    return result`,
+      entryFunction: '',
+      code: `# Anything you write is visualized. No function needed.
+array = [5, 3, 8, 1, 9, 2]
+total = 0
+largest = array[0]
+
+for i in range(len(array)):
+    total += array[i]
+    if array[i] > largest:
+        largest = array[i]
+
+average = total / len(array)
+seen = {}
+for value in array:
+    seen[value] = True`,
     },
   },
 };

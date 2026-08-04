@@ -296,17 +296,18 @@ export function App() {
                 spellCheck={false}
               />
             </div>
-            {item.kind === 'scratch' && (
-              <div className="field">
-                <label>Run function</label>
-                <input
-                  className="text-input"
-                  value={entryFunction}
-                  onChange={(e) => setEntryFunction(e.target.value)}
-                  spellCheck={false}
-                />
-              </div>
-            )}
+            {/* Always available: any item can be run as a script by clearing
+                this, or as a call by naming a function. */}
+            <div className="field">
+              <label title="Leave blank to run the code as a script">Run function (optional)</label>
+              <input
+                className="text-input entry-input"
+                value={entryFunction}
+                onChange={(e) => setEntryFunction(e.target.value)}
+                placeholder="blank = run as script"
+                spellCheck={false}
+              />
+            </div>
             <label className="toggle">
               <input type="checkbox" checked={liveEnabled} onChange={(e) => setLiveEnabled(e.target.checked)} />
               Live

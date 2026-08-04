@@ -52,7 +52,8 @@ export function useLiveRun({ code, language, entryFunction, argsJson, enabled, r
   }, [resetKey]);
 
   useEffect(() => {
-    if (!enabled || !code.trim() || !entryFunction.trim()) return;
+    // No entry function is fine — the code then runs as a script.
+    if (!enabled || !code.trim()) return;
 
     const timer = window.setTimeout(async () => {
       // Supersede any in-flight run before starting a new one.

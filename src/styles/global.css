@@ -232,6 +232,10 @@ body {
   min-width: 140px;
 }
 
+.entry-input {
+  min-width: 130px;
+}
+
 .field label {
   font-size: 11px;
   text-transform: uppercase;
