@@ -5,6 +5,7 @@ import { isTagged } from '../../engine/types';
 
 export type ValueKind =
   | 'primitive'
+  | 'string'
   | 'array1d'
   | 'array2d'
   | 'linkedList'
@@ -36,7 +37,16 @@ function nodeChildFields(v: VizObject): string[] {
   return Object.keys(v.fields).filter((k) => CHILD_FIELDS.includes(k));
 }
 
+/**
+ * Strings long enough to be worth drawing per character. A one-character
+ * string is clearer in the scalar table than as a lone cell.
+ */
+export function isDrawableString(v: VizValue): v is string {
+  return typeof v === 'string' && v.length > 1 && v.length <= 60;
+}
+
 export function classify(v: VizValue): ValueKind {
+  if (isDrawableString(v)) return 'string';
   if (isPrimitive(v)) return 'primitive';
   if (isArray(v)) {
     if (v.length > 0 && v.every((x) => isArray(x))) return 'array2d';
@@ -62,5 +72,7 @@ export function classify(v: VizValue): ValueKind {
 export function isStructural(kind: ValueKind): boolean {
   return kind !== 'primitive' && kind !== 'function';
 }
+
+export { isDrawableString as isStringCells };
 
 export { VALUE_FIELDS, CHILD_FIELDS };

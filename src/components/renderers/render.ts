@@ -51,7 +51,8 @@ interface Cursor {
 
 const CURSOR_ROW = 18;
 
-function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizValue[], cursors: Cursor[] = []) {
+/** `label` is the full block heading, so strings can label themselves. */
+function renderCells(parent: any, label: string, arr: VizValue[], prev?: VizValue[], cursors: Cursor[] = []) {
   const byIndex = new Map<number, string[]>();
   for (const cursor of cursors) {
     const existing = byIndex.get(cursor.index) ?? [];
@@ -62,7 +63,7 @@ function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizVal
   // so arrays without index variables keep their compact height.
   const top = byIndex.size > 0 ? CURSOR_ROW : 6;
 
-  const body = block(parent, `${name}  ·  array[${arr.length}]`);
+  const body = block(parent, label);
   const width = Math.max(arr.length * (CELL + GAP) + GAP, CELL + GAP);
   const svg = body
     .append('svg')
@@ -115,6 +116,20 @@ function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizVal
       .attr('class', 'viz-cursor-label')
       .text(`${names.join(',')} ↓`);
   }
+}
+
+/**
+ * A string, drawn as indexed character cells. String algorithms walk positions
+ * exactly like array algorithms do, so showing only the quoted value hid the
+ * thing the code was actually working on.
+ */
+function renderString(parent: any, name: string, value: string, prev?: string, cursors: Cursor[] = []) {
+  const previous = typeof prev === 'string' ? prev.split('') : undefined;
+  renderCells(parent, `${name}  ·  string[${value.length}]`, value.split(''), previous, cursors);
+}
+
+function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizValue[], cursors: Cursor[] = []) {
+  renderCells(parent, `${name}  ·  array[${arr.length}]`, arr, prev, cursors);
 }
 
 // --- 2D array / matrix -----------------------------------------------------
@@ -403,6 +418,17 @@ export function renderStep(container: HTMLElement, step: Step | null, prev: Step
     const kind = classify(value);
     const prevVal = prev?.variables[name];
     switch (kind) {
+      case 'string': {
+        const str = value as string;
+        renderString(
+          root,
+          name,
+          str,
+          typeof prevVal === 'string' ? prevVal : undefined,
+          indexCursors(scalars, str.length),
+        );
+        break;
+      }
       case 'array1d': {
         const arr = value as VizValue[];
         renderArray1d(
