@@ -79,6 +79,16 @@ export interface LibraryItem {
   languages: Partial<Record<Language, LanguageVariant>>;
   /** Arguments used for the live preview, as a JSON array string. */
   previewArgs: string;
+  /**
+   * What lands in the editor when the item opens.
+   *
+   * `starter` (the default) gives the stub, so the challenge can be attempted.
+   * `solution` opens with the worked solution already running — useful for the
+   * canonical problems, where seeing a correct implementation animate teaches
+   * more than an empty function does. Either way the Solution/Starter toggle
+   * switches between them.
+   */
+  openWith?: 'starter' | 'solution';
   /** Present only on challenges — their presence is what makes an item judgeable. */
   testCases?: TestCase[];
   compare?: CompareMode;

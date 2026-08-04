@@ -66,6 +66,9 @@ export const CHALLENGES: LibraryItem[] = [
       },
     },
     // Either ordering of the index pair is correct.
+    // Canonical problem: opens with the solution so the visualisation has
+    // something to show immediately. Press Starter to attempt it.
+    openWith: 'solution',
     compare: 'unordered',
     testCases: [
       { args: [[2, 7, 11, 15], 9] },
@@ -142,6 +145,9 @@ export const CHALLENGES: LibraryItem[] = [
     return -1`,
       },
     },
+    // Canonical problem: opens with the solution so the visualisation has
+    // something to show immediately. Press Starter to attempt it.
+    openWith: 'solution',
     compare: 'exact',
     testCases: [
       { args: [[-1, 0, 3, 5, 9, 12], 9] },
@@ -211,6 +217,9 @@ export const CHALLENGES: LibraryItem[] = [
     return len(stack) == 0`,
       },
     },
+    // Canonical problem: opens with the solution so the visualisation has
+    // something to show immediately. Press Starter to attempt it.
+    openWith: 'solution',
     compare: 'exact',
     testCases: [
       { args: ['()[]{}'] },

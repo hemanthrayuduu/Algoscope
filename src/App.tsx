@@ -129,11 +129,14 @@ export function App() {
   function loadItem(next: LibraryItem, lang: Language = language) {
     const variant = next.languages[lang] ?? next.languages.javascript ?? next.languages.python;
     if (!variant) return;
+    // Some challenges open with the worked solution rather than an empty stub,
+    // so there is something to watch straight away.
+    const openSolved = next.openWith === 'solution' && Boolean(variant.referenceSolution);
     setItemId(next.id);
-    setCode(variant.code);
+    setCode(openSolved ? variant.referenceSolution! : variant.code);
     setEntryFunction(variant.entryFunction);
     setArgsJson(next.previewArgs);
-    setShowingSolution(false);
+    setShowingSolution(openSolved);
     setManualResult(null);
     setReport(null);
     setStepIndex(-1);

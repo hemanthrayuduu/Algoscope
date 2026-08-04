@@ -92,6 +92,16 @@ describe('challenges', () => {
         expect(report!.allPassed).toBe(true);
       });
 
+      it('can supply whatever it opens with', () => {
+        // An item that opens with its solution must actually have one in every
+        // language it declares, or it would open with an empty stub instead.
+        if (item.openWith === 'solution') {
+          for (const [language, variant] of Object.entries(item.languages)) {
+            expect(variant.referenceSolution, `${language} reference`).toBeTruthy();
+          }
+        }
+      });
+
       it('rejects the unmodified starter code', async () => {
         // If a stub passes, the comparison mode is too lenient for this item.
         const report = await judge(item, item.languages.javascript!.code, 'javascript');

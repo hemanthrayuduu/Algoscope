@@ -81,6 +81,14 @@ export function ItemPanel({ item }: Props) {
 
       {judgeable && (
         <p className="item-hint">
+          {item.openWith === 'solution' && (
+            <>
+              Opens with a worked solution so you can watch it run — press <strong>↩ Starter</strong> to clear it
+              and try the problem yourself.
+              <br />
+              <br />
+            </>
+          )}
           {item.testCases.length} test cases run when you submit, including edge cases and hidden ones.
         </p>
       )}
