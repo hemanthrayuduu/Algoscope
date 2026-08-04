@@ -43,10 +43,31 @@ function block(parent: Selection<any, any, any, any>, label: string) {
 
 // --- 1D array --------------------------------------------------------------
 
-function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizValue[]) {
+/** An index variable pointing into an array, e.g. `i = 3`. */
+interface Cursor {
+  name: string;
+  index: number;
+}
+
+const CURSOR_ROW = 18;
+
+function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizValue[], cursors: Cursor[] = []) {
+  const byIndex = new Map<number, string[]>();
+  for (const cursor of cursors) {
+    const existing = byIndex.get(cursor.index) ?? [];
+    existing.push(cursor.name);
+    byIndex.set(cursor.index, existing);
+  }
+  // Reserve a row above the cells for cursor labels only when there are any,
+  // so arrays without index variables keep their compact height.
+  const top = byIndex.size > 0 ? CURSOR_ROW : 6;
+
   const body = block(parent, `${name}  ·  array[${arr.length}]`);
   const width = Math.max(arr.length * (CELL + GAP) + GAP, CELL + GAP);
-  const svg = body.append('svg').attr('width', width).attr('height', CELL + 34);
+  const svg = body
+    .append('svg')
+    .attr('width', width)
+    .attr('height', CELL + 34 + (byIndex.size > 0 ? CURSOR_ROW : 0));
 
   const cells = svg
     .selectAll('g.cell')
@@ -54,7 +75,7 @@ function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizVal
     .enter()
     .append('g')
     .attr('class', 'cell')
-    .attr('transform', (_d, i) => `translate(${GAP + i * (CELL + GAP)}, 6)`);
+    .attr('transform', (_d, i) => `translate(${GAP + i * (CELL + GAP)}, ${top})`);
 
   cells
     .append('rect')
@@ -63,7 +84,9 @@ function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizVal
     .attr('rx', 8)
     .attr('class', (_d, i) => {
       const changed = prev && JSON.stringify(prev[i]) !== JSON.stringify(arr[i]);
-      return `viz-cell${changed ? ' viz-cell-changed' : ''}`;
+      // A changed value is the stronger signal, so it wins over a cursor.
+      if (changed) return 'viz-cell viz-cell-changed';
+      return byIndex.has(i) ? 'viz-cell viz-cell-cursor' : 'viz-cell';
     });
 
   cells
@@ -81,6 +104,17 @@ function renderArray1d(parent: any, name: string, arr: VizValue[], prev?: VizVal
     .attr('text-anchor', 'middle')
     .attr('class', 'viz-index-text')
     .text((_d, i) => i);
+
+  // Cursor labels, above the cell they point at.
+  for (const [index, names] of byIndex) {
+    svg
+      .append('text')
+      .attr('x', GAP + index * (CELL + GAP) + CELL / 2)
+      .attr('y', CURSOR_ROW - 6)
+      .attr('text-anchor', 'middle')
+      .attr('class', 'viz-cursor-label')
+      .text(`${names.join(',')} ↓`);
+  }
 }
 
 // --- 2D array / matrix -----------------------------------------------------
@@ -322,6 +356,30 @@ function renderCallStack(parent: any, stack: CallFrame[]) {
     .text((d) => `${d.fn}()  ·  line ${d.line}`);
 }
 
+/**
+ * Variable names treated as array indices when their value is in range.
+ *
+ * Restricted to a known list on purpose: any integer could coincidentally fall
+ * inside an array's bounds, and labelling `best` or `sum` as a position would be
+ * actively misleading. These names cover the conventional index variables in
+ * DSA code.
+ */
+const INDEX_NAMES = new Set([
+  'i', 'j', 'k', 'l', 'r', 'lo', 'hi', 'mid', 'left', 'right', 'low', 'high',
+  'start', 'end', 'idx', 'index', 'pos', 'p', 'q', 'slow', 'fast', 'first',
+  'last', 'read', 'write', 'pivot', 'cursor', 'head', 'tail',
+]);
+
+function indexCursors(scalars: [string, VizValue][], length: number): Cursor[] {
+  return scalars
+    .filter(([name, value]) => {
+      if (typeof value !== 'number' || !Number.isInteger(value)) return false;
+      if (!INDEX_NAMES.has(name.toLowerCase())) return false;
+      return value >= 0 && value < length;
+    })
+    .map(([name, value]) => ({ name, index: value as number }));
+}
+
 /** Clears `container` and renders one step. `prev` enables change highlighting. */
 export function renderStep(container: HTMLElement, step: Step | null, prev: Step | null): void {
   const root = select(container);
@@ -345,9 +403,17 @@ export function renderStep(container: HTMLElement, step: Step | null, prev: Step
     const kind = classify(value);
     const prevVal = prev?.variables[name];
     switch (kind) {
-      case 'array1d':
-        renderArray1d(root, name, value as VizValue[], Array.isArray(prevVal) ? (prevVal as VizValue[]) : undefined);
+      case 'array1d': {
+        const arr = value as VizValue[];
+        renderArray1d(
+          root,
+          name,
+          arr,
+          Array.isArray(prevVal) ? (prevVal as VizValue[]) : undefined,
+          indexCursors(scalars, arr.length),
+        );
         break;
+      }
       case 'array2d':
         renderArray2d(root, name, value as VizValue[]);
         break;

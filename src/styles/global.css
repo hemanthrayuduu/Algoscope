@@ -17,6 +17,8 @@
   --cell-border: #6366f1;
   --cell-changed: #fde68a;
   --cell-changed-border: #f59e0b;
+  --cell-cursor: #dcfce7;
+  --cell-cursor-border: #16a34a;
   --node: #e0f2fe;
   --node-border: #0284c7;
   --edge: #94a3b8;
@@ -43,6 +45,8 @@
   --cell-border: #6366f1;
   --cell-changed: #4d3f16;
   --cell-changed-border: #f59e0b;
+  --cell-cursor: #14361f;
+  --cell-cursor-border: #4ade80;
   --node: #10344b;
   --node-border: #38bdf8;
   --edge: #4b5568;
@@ -419,6 +423,21 @@ body {
 .viz-cell-changed {
   fill: var(--cell-changed);
   stroke: var(--cell-changed-border);
+}
+
+/* The cell an index variable currently points at. Distinct from a changed
+   value: this says "the algorithm is looking here", not "this just changed". */
+.viz-cell-cursor {
+  fill: var(--cell-cursor);
+  stroke: var(--cell-cursor-border);
+  stroke-width: 2.5px;
+}
+
+.viz-cursor-label {
+  fill: var(--cell-cursor-border);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .viz-cell-text {
@@ -1029,6 +1048,29 @@ body {
   margin: 14px 0 0;
   padding-top: 10px;
   border-top: 1px solid var(--border);
+}
+
+.viz-error {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  background: rgba(217, 43, 43, 0.08);
+  border-left: 3px solid var(--warn);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.viz-cta {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
 }
 
 .example-viz-expected code {

@@ -40,7 +40,15 @@ export const SCRATCH: LibraryItem = {
 
 export const LIBRARY: LibraryItem[] = [...CHALLENGES, ...DEMOS, SCRATCH];
 
-export const DEFAULT_ITEM_ID = 'two-sum';
+/**
+ * What loads on a cold visit.
+ *
+ * A demo rather than a challenge, deliberately: a challenge opens as an empty
+ * stub, so the first thing a visitor saw was a blank editor and a still
+ * visualization. Bubble sort animates immediately — swapping cells, with the i
+ * and j cursors moving — which is the thing the app is actually for.
+ */
+export const DEFAULT_ITEM_ID = 'bubble-sort';
 
 export function getItem(id: string): LibraryItem {
   return LIBRARY.find((item) => item.id === id) ?? LIBRARY[0];
